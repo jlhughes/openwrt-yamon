@@ -1,14 +1,17 @@
 # openwrt-yamon
-<h1>YAMon2 for openwrt</h1>
+<h1>YAMon2 configuration for openwrt</h1>
 
 YAMon2 version: <b>v2.1.0d (Script v2.0.15)</b>
-openwrt version: <b>CHAOS CALMER (15.05-rc3, r46163)</b>
 
-<code>BASEDIR="/mnt/sda1/yamon"</code>
+OpenWrt version: <b>CHAOS CALMER (15.05-rc3, r46163)</b>
 
-Review these changes then follow the readme.txt for installation. Make these changes before starting.
+<h2>Download YAMon2</Download>
+* http://usage-monitoring.com/
+
+Review these changes then follow the readme.txt (in the download zip) for installation. Make these changes before starting.
 
 <h2>Setup file changes</h2>
+<code>BASEDIR="/mnt/sda1/yamon"</code>
 
 <h3>1ds.sh</h3>
 * set <code>_baseDir</code> to BASEDIR
@@ -38,7 +41,7 @@ Openwrt does not have nvram, I don't know what it's replacement is but I found t
 * copy <code>nvram.openwrt</code> to <code>/usr/bin/nvram</code>
 
 <h2>web access</h2>
-The default configuration will copy the web reports to /tmp/www which is not by default accessible.  I choose to make a soft link (below). The yamon page is then available at <code>http://router_name/yamon/yamon.html</code>
+The default configuration will copy the web reports to /tmp/www which is not by default accessible.  I choose to make a soft link (below). The yamon page is then available at <code>http://router_name/yamon/yamon2.html</code>
 * <code> cd /www; ln -s /tmp/www yamon</code>
 
 <h2>init rc / start at boot</h2>
