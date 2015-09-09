@@ -8,9 +8,10 @@ OpenWrt version: <b>CHAOS CALMER (15.05-rc3, r46163)</b>
 <h2>Download YAMon2</h2>
 * http://usage-monitoring.com/
 
+<h2>Installation</h2>
 Review these changes then follow the readme.txt (in the download zip) for installation. Make these changes before starting.
 
-<h2>Setup file changes</h2>
+<h2>Configuration / Setup file changes</h2>
 <code>BASEDIR="/mnt/sda1/yamon"</code>
 
 <h3>1ds.sh</h3>
