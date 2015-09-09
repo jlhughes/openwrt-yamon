@@ -5,9 +5,8 @@ YAMon2 version: <b>v2.1.0d (Script v2.0.15)</b>
 
 OpenWrt version: <b>CHAOS CALMER (15.05-rc3, r46163)</b>
 
-<h2>Download YAMon2</Download>
+<h2>Download YAMon2</h2>
 * http://usage-monitoring.com/
-
 
 Review these changes then follow the readme.txt (in the download zip) for installation. Make these changes before starting.
 
