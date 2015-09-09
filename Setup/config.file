@@ -1,0 +1,67 @@
+##########################################################################
+# Yet Another Monitor (YAMon)
+# Copyright (c) 2013-2014 Al Caughey
+# All rights reserved.
+#
+# DEFAULT CONFIG FILE FOR YAMon...
+# tailor these values to suit your installation
+# * denotes default or recommended value.
+#
+##########################################################################
+
+# version 2.0.14 - added parameters: _firmware, _bridgeIP, _defaultOwner, _defaultDeviceName, _do_separator
+# version 2.1.0 - added parameters: _includeIPv6 (coming soon???)
+
+_firmware=1                             # which firmware is running on the router: permitted values: 0->DD-WRT(*) || 1->OpenWrt
+_updatefreq=15                          # number of seconds between updates (* default `15` sec)
+_updateInterval=4                       # number of intervals between updates of the usage data(* default `4`)
+_publishInterval=12                     # number of intervals between updates for to the website (* default `12`)
+_ispBillingDay=5                        # roll-over day of the month for ISP billing (* default `1`)
+_baseDir="/mnt/sda1/yamon/"                 # path to the installation folder (* default `/opt/YAMon/`)
+_setupDir="Setup/"                      # setup folder name (* default `Setup/`)
+_setupWebDir="Setup/www/"               # path to the web files (* default `Setup/www/`)
+_dataDir="data/"                        # path to the data directory (* default `data/`)
+_logDir="/tmp/yamon/logs/"                         # path to log files  (* default `logs/`)
+                                        #   NB - If _logDir starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_wwwPath="/tmp/www/"                    # path to web directory (* default `/tmp/www/`)
+_wwwData="data/"                        # path to web data directory(* default `data/`)
+_wwwJS="js/"                            # path to JavaScript directory(* default `js/`)
+_usageFileName="mac_data.js"            # file name for usage data (* default `mac_data.js`)
+_usersFileName="users.js"               # file name for user/devices file (* default `users.js`)
+_configWWW="config.js"                  # file name for config file (* default `config.js`)
+_enableLogging=1                        # turn logging on/off: permitted values: 1->logging(*) || 0->no logging
+_log2file=1                             # send logs to screen or file: permitted values: 0->screen || 1->file(*) || 2->both
+_loglevel=0                             # amount of detail to include in the log: permitted values: -1->really verbose || 0->all || 1->most(*) || 2->serious only
+_dowwwBU=1                              # whether or not to make backups of the www directory when the script is shut down - values: 1-->Yes || 0->No(*)
+_wwwBU="wwwBU/"                         # path to web backup directory  (* default `wwwBU/`)
+                                        #   NB - only required if _dowwwBU == 1...
+                                        #   NB - If _wwwBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_doDailyBU=1                            # whether or not to make daily backups of user & usage data - values: 1-->Yes(*) || 0->No
+_dailyBUPath="daily-bu2/"               # path to back-ups directory (* default `daily bu/`)
+                                        #   NB - only required if doDailyBU == 1...
+                                        #   NB - if _dailyBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_tarBUs=1                               # permitted values: 0->no(*) || 1->yes
+                                        #   NB - if doDailyBU == 1 && _tarBUs==1, the daily backup files will be compressed
+_hourlyFileName="hourly_data.js"        # file name for hourly usage file (* default `hourly_data.js`)
+                                        #   NB - file extension changed from .html to .js
+_doLiveUpdates=1                        # whether or not to record live usage - values: 1-->Yes || 0->No(*)
+_doCurrConnections=1                    # whether or not to include current connections in the live usage file - values: 1-->Yes || 0->No(*)
+_liveFileName="live_data.js"            # file name for live usage data (* default `live_data.js`)
+                                        #   NB - only required if _doLiveUpdates == 1
+_lan_iface_only=0                       # whether to track data only from br0 - values: 0->No(*) || 1->Yes
+_unlimited_usage=0                      # whether or not you have an unlimited downloads time period: 0->No(*) || 1->Yes
+_unlimited_start="2:00"                 # the time (hours:minutes) when your unlimited downloads period starts
+_unlimited_end="5:30"                   # the time (hours:minutes) when your unlimited downloads period ends
+                                        #   NB - only required if _unlimited_usage == 1
+_settings_pswd=''                       # optionally password protect the Settings tab in the HTML reports (* default '' empty string or omitted)
+_dnsmasq_conf="/tmp/etc/dnsmasq.conf"       # path to dnsmasq.conf (* default `/tmp/dnsmasq.conf`)
+_dnsmasq_leases="/mnt/sda1/etc/dhcp.leases"   # path to dnsmasq.leases (* default `/tmp/dnsmasq.leases`)
+_do_separator=''                        # a default separator character between owner and device name in static leases or dnsmasq values, e.g., Al-iPhone
+_includeBridge=0                        # whether or not there is a bridge in your wireless configuration - values: 0-->No(*) || 1->Yes
+_bridgeMAC="XX:XX:XX:XX:XX:XX"          # mac address for the bridge device... MUST BE UPPERCASE!!!
+                                        #   NB - only required if _includeBridge == 1
+_bridgeIP="192.168.1.199"               # ip address for the bridge device... 
+                                        #   NB - only required if _includeBridge == 1
+_defaultOwner="Unknown"                 # default owner name for new devices
+_defaultDeviceName="New Device"         # default name for new devices if nothing can be found by the script
+_includeIPv6=0                          # whether or not your router is configured for IPv6: 0->no(*) || 1->yes *** LEAVE THIS AT 0 FOR NOW ***

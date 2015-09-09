@@ -1,0 +1,4 @@
+#!/bin/sh
+/mnt/sda1/yamon/Setup/yamon2.sh --stop
+
+exit

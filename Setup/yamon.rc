@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+# YAMon2 init.d script
+
+START=99
+STOP=9
+BASE_DIR="/mnt/sda1/yamon/Setup"
+
+restart() {
+	$BASE_DIR/yamon.shutdown
+	$BASE_DIR/yamon.startup
+}
+
+start() {
+	echo "starting yamon"
+	$BASE_DIR/yamon.startup
+}
+
+stop() {
+	echo "stopping yamon"
+	$BASE_DIR/yamon.shutdown
+}
