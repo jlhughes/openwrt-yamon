@@ -2,7 +2,7 @@
 
 ##########################################################################
 # Yet Another Monitor (YAMon)
-# Copyright (c) 2013-2014 Al Caughey
+# Copyright (c) 2013-2015 Al Caughey
 # All rights reserved.
 #
 #  This program recreates the monthly usage files from the hourlies.
@@ -10,16 +10,18 @@
 #  The original files are not altered in any way but you should
 #  back things up beforehand just in case!  Use at your own risk.
 #
-#  Updated: Apr 21, 2014 - added this header
+#  Updated:
+#  - Apr 21, 2014 - added this header
+#  - Oct 19, 2014 - now counts server reboots
+#  - Mar 29, 2015 - now reads config.file and accounts for the value of _organizeData
+#  - Aug 9, 2015 - fixed octal issues (leading zeroes on months)
+#  - Aug 18, 2015 - replaced for...seq with while (for old firmware versions)
 #
 ##########################################################################
-
-_loglevel=1
-_unlimited_usage=1
-_baseDir="/mnt/sda1/yamon/"
-_dataDir="data/"
-_hourlyFileName="hourly_data.js"
-_usageFileName="mac_data2.js"
+d_baseDir=`dirname $0`
+_configFile="$d_baseDir"'/config.file'
+d_usageFileName="mac_data2.js"
+_loglevel=0
 
 send2log(){
 	[ "$2" -ge "$_loglevel" ] && echo "$1"
@@ -97,11 +99,36 @@ updateHourly2Monthly()
 	#local _pYear=$_cYear
 	local _pDay=$1
 	local _pMonth=$2
+	local _pMonth=${_pMonth#0}
 	local _pYear=$3
+	local rMonth=$_pMonth
+	local rYear=$_pYear
 
-	local _prevhourlyUsageDB="$_baseDir$_dataDir$_pYear-$_pMonth-$_pDay-$_hourlyFileName"
+	if [ "$_pDay" -lt "$_ispBillingDay" ] ; then
+		local rMonth=$(($rMonth-1))
+		if [ "$rMonth" == "0" ] ; then
+			rMonth=12
+			local rYear=$(($rYear-1))
+		fi
+	fi
+	_pMonth=$(printf %02d $_pMonth)
+	rMonth=$(printf %02d $rMonth)
+	#local savePath="$_baseDir$_dataDir"
+	#case $_organizeData in
+	#	(*"0"*)
+	#		local savePath="$_baseDir$_dataDir"
+	#	;;
+	#	(*"1"*)
+	#		local savePath="$_baseDir$_dataDir$rYear/"
+	#	;;
+	#	(*"2"*)
+	#		local savePath="$_baseDir$_dataDir$rYear/$rMonth/"
+	#	;;
+	#esac
+
+	local _prevhourlyUsageDB="$savePath$_pYear-$_pMonth-$_pDay-$_hourlyFileName"
 	if [ ! -f "$_prevhourlyUsageDB" ]; then
-		send2log "*** Hourly usage file not found ($_prevhourlyUsageDB)" 2
+		send2log "*** Hourly usage file not found ($_prevhourlyUsageDB)  (_organizeData:$_organizeData)" 2
 		return
 	fi
 	local hsum=''
@@ -116,9 +143,11 @@ updateHourly2Monthly()
 	local cLine=$(echo "$srch" | grep -i "$findstr")
 	local p_uptime=$(getCV "$cLine" "uptime")
 	send2log "  >>> reading from $_prevhourlyUsageDB " 0
+	local srb=0
+	local reboots=''
 	while read hline
 	do
-		local mac=$(echo "$hline" | grep -io '\"mac\":\"[a-z0-9\:]*\"' | grep -io '\([a-z0-9]\{2\}\:\)\{5,\}[a-z0-9]\{2\}');
+		local mac=$(echo "$hline" | grep -io '\"mac\":\"[a-z0-9\:\-]*\"' | cut -f4 -d"\"");
 		local down=$(getCV "$hline" "down")
 		local up=$(getCV "$hline" "up")
 		local hr=$(getCV "$hline" "hour")
@@ -136,18 +165,21 @@ updateHourly2Monthly()
 		fi
 		local findstr="$fn({$m_nm\"day\":\"$_pDay\".*})"
 		local cLine=$(echo "$hsum" | grep -i "$findstr")
-		[ "$fn" == "dt" ] && [ "$_unlimited_usage" -eq "1" ] && ul_do=$(getCV "$hline" "ul_do")
-		[ "$fn" == "dt" ] &&  [ "$_unlimited_usage" -eq "1" ] && ul_up=$(getCV "$hline" "ul_up")
-
+		if [ "$fn" == "dt" ] && [ "$_unlimited_usage" -eq "1" ] ; then
+			ul_do=$(getCV "$hline" "ul_do")
+			ul_up=$(getCV "$hline" "ul_up")
+		fi
+		send2log "  >>> fn: $fn	mac: $mac   hline: $hline" 0
 		if [ -z "$cLine" ] ; then		#Add a new line
 			local newentry="$fn({$m_nm\"day\":\"$_pDay\",\"down\":$down,\"up\":$up})"
 			[ "$fn" == "dt" ] && [ "$_unlimited_usage" -eq "1" ] && newentry="$fn({$m_nm\"day\":\"$_pDay\",\"down\":$down,\"up\":$up,\"ul_do\":$ul_do,\"ul_up\":$ul_up})"
 			hsum="$hsum
 $newentry"
-			send2log "  >>> Add new line:\t$newentry " 0
+			send2log "  >>> Add new line:	$newentry " 0
 		elif [ "$fn" == "dt" ] ; then	#Update an existing hourly line
 			local do_tot=$(getCV "$cLine" "down")
 			local up_tot=$(getCV "$cLine" "up")
+
 			do_tot=$(digitAdd "$do_tot" "$down")
 			up_tot=$(digitAdd "$up_tot" "$up")
 			[ "$do_tot" \< "0" ] && send2log "  >>> do_tot rolled over --> $do_tot" 0
@@ -164,26 +196,34 @@ $newentry"
 				local newentry="$fn({$m_nm\"day\":\"$_pDay\",\"down\":$do_tot,\"up\":$up_tot})"
 			fi
 			hsum=$(echo "$hsum" | sed -e "s/$findstr/$newentry/g")
-			send2log "  >>> update existing line:\t$newentry " 0
+			send2log "  >>> update existing line:	$newentry " 0
 
 		else	#Update an existing PND line
-			svd=$(digitSub "$down" "$p_pnd_d")
-			svu=$(digitSub "$up" "$p_pnd_u")
 			local uptime=$(getCV "$hline" "uptime")
-			uptime="$(echo $uptime | sed 's/\.[0-9]{2}//')"
+			send2log "  >>> hline: $hline" 0
 			if [ "$uptime" -gt "$p_uptime" ] ; then
+				svd=$(digitSub "$down" "$p_pnd_d")
+				svu=$(digitSub "$up" "$p_pnd_u")
 				[ "$svd" \< "0" ] && send2log "  >>> svd rolled over --> $svd" 0
 				[ "$svu" \< "0" ] && send2log "  >>> svu rolled over --> $svu" 0
 				[ "$svd" \< "0" ] && svd=$(digitSub "$_maxInt" "$svd")
 				[ "$svu" \< "0" ] && svu=$(digitSub "$_maxInt" "$svu")
 				p_do_tot=$(digitAdd "$p_do_tot" "$svd")
 				p_up_tot=$(digitAdd "$p_up_tot" "$svu")
-				local newentry="$fn({$m_nm\"day\":\"$_pDay\",\"down\":$p_do_tot,\"up\":$p_up_tot})"
-				hsum=$(echo "$hsum" | sed -e "s/$findstr/$newentry/g")
-				send2log "  >>> update existing dtp line:\t$newentry " 0
+				send2log "  >>> update existing dtp line:	$newentry " 0
 			else
-				send2log "  >>> Server rebooted... $hr - no update /tuptime:$uptime\t p_uptime:$p_uptime" 2
+				svd=$down
+				svu=$up
+				p_do_tot=$(digitAdd "$p_do_tot" "$svd")
+				p_up_tot=$(digitAdd "$p_up_tot" "$svu")
+				srb=$(($srb + 1))
+				reboots=",\"reboots\":\"$srb\""
+				send2log "  >>> Server rebooted... $hr - partial update /tuptime:$uptime	 p_uptime:$p_uptime$reboots" 2
 			fi
+			send2log "  >>> fn: $fn	hr: $hr	uptime: $uptime	 p_uptime: $p_uptime	svd: $svd	svu: $svu " 0
+			local newentry="$fn({$m_nm\"day\":\"$_pDay\",\"down\":$p_do_tot,\"up\":$p_up_tot$reboots})"
+			hsum=$(echo "$hsum" | sed -e "s/$findstr/$newentry/g")
+			send2log "  >>> p_do_tot: $p_do_tot	p_up_tot: $p_up_tot " 0
 			p_pnd_d=$down
 			p_pnd_u=$up
 			p_uptime=$uptime
@@ -193,57 +233,105 @@ $newentry"
 	echo "$hsum" >> $_macUsageDB
 	local ds=$(date +"%Y-%m-%d %H:%M:%S")
 	sed -i "s~var monthly_updated=.*~var monthly_updated=\"$ds\"~" $_macUsageDB
-	#copyfiles "$_macUsageDB" "$_macUsageWWW"
 	send2log "=== done updateHourly2Monthly === " 0
 }
 
 send2log "=== updateHourly2Monthly === " 2
-if [ -z $1 ] && [ -z $2 ] ; then
-	send2log "You must specify at least two parameters!
-***************************
-usage h2m.sh [startday] [month] [[year]] --> process all days for the billing period start on
-	 \`startday\` of \`month\` and going to \`startday -1\` of the next month
-  if year is omitted, it is assumed to be the current year
-***************************" 2
+if [ ! -f "$_configFile" ] ; then
+	send2log "*** Cannot find  \`config.file\` in the following location:
+>>>	$_configFile
+If you are using a different default directory (other than the one specified above),
+you must edit lines 19-20 in this file to point to your file location.
+Otherwise, check spelling and permissions." 0
 	exit 0
 fi
 
-rday=$(printf %02d $1)
-rMonth=$(printf %02d $2)
+if [ -z $1 ] && [ -z $2 ] ; then
+	send2log "You must specify at least two parameters!
+***************************
+usage h2m.sh [startday] [month] [[year]] [[just]] --> process all days for the billing period start on
+	 \`startday\` of \`month\` and going to \`startday -1\` of the next month
+  if \`year\` is omitted, it is assumed to be the current year
+  if \`just\` is included, then just that day in the specified interval will be updated
+***************************" 0
+	exit 0
+fi
+
+send2log "  Reading config.file " 0
+while read row
+do
+	eval $row
+done < $_configFile
+
+_usageFileName=$d_usageFileName
+local c=$1
+local mo=$2
+mo=${mo#0}
+rday=$(printf %02d $c)
+rMonth=$(printf %02d $mo)
+
 if [ -z $3 ] ;  then
 	rYear=$(date +%Y)
 else
 	rYear=$3
 fi
-_macUsageDB="$_baseDir$_dataDir$rYear-$rMonth-$rday-$_usageFileName"
+if [ ! -z $4 ] ; then
+	just=$4
+fi
+
+local savePath="$_baseDir$_dataDir"
+case $_organizeData in
+	(*"0"*)
+		local savePath="$_baseDir$_dataDir"
+	;;
+	(*"1"*)
+		local savePath="$_baseDir$_dataDir$rYear/"
+	;;
+	(*"2"*)
+		local savePath="$_baseDir$_dataDir$rYear/$rMonth/"
+	;;
+esac
+
+local _prevhourlyUsageDB="$savePath$rYear-$rMonth-$rday-$_hourlyFileName"
+
+_macUsageDB="$savePath$rYear-$rMonth-$rday-$_usageFileName"
 ds=$(date +"%Y-%m-%d %H:%M:%S")
-touch $_macUsageD
+[ ! -f "$_macUsageDB" ] && touch $_macUsageDB
+
 echo "var monthly_created=\"$ds\"
 var monthly_updated=\"$ds\"" > $_macUsageDB
 
 send2log "Processing data files for billing interval: $rYear-$rMonth-$rday" 2
 send2log ">>> saving to: $_macUsageDB" 2
+send2log ">>> just: $just" 2
 
-local c=$1
-
-while [  $c -le "31" ]; do
-	local d=$(printf %02d $c)
+local i=$c
+while [  $i -le "31" ]; do
+	[ ! -z $just ] && [ "$just" -ne "$i" ] && continue
+	echo "$i"
+	local d=$(printf %02d $i)
 	updateHourly2Monthly "$d" "$rMonth" "$rYear"
-	c=$(($c+1))
+    i=$(($i+1))
 done
-c=1
+send2log ">>> Finished to end of month" 2
 if [ "$2" -eq "12" ]; then
 	rMonth='01'
 	rYear=$(($rYear+1))
 else
-	local nm=$(($2+1))
+	local nm=$(($mo+1))
 	rMonth=$(printf %02d $nm)
 fi
-while [  $c -lt "$1" ]; do
-	d=$(printf %02d $c)
+
+i=1
+while [  $i -lt "$c" ]; do
+	[ ! -z $just ] && [ "$just" -ne "$i" ] && continue
+	echo "$i"
+	d=$(printf %02d $i)
 	updateHourly2Monthly "$d" "$rMonth" "$rYear"
-	c=$(($c+1))
+    i=$(($i+1))
 done
+send2log ">>> Finished start to end of next interval" 2
+
 ds=$(date +"%Y-%m-%d %H:%M:%S")
 sed -i "s~var monthly_updated=.*~var monthly_updated=\"$ds\"~" $_macUsageDB
 

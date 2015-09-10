@@ -1,4 +1,18 @@
 #!/bin/sh
-/mnt/sda1/yamon/Setup/yamon2.sh --stop
+
+##########################################################################
+# Yet Another Monitor (YAMon)
+# Copyright (c) 2013-2015 Al Caughey
+# All rights reserved.
+#
+#  Copy this file to the Administration-->Commands tab in the DD-WRT GUI
+#
+##########################################################################
+
+# change path to suit your installation
+path="/mnt/sda1/yamon/Setup"
+
+# stop the script
+$path/yamon2.sh --stop
 
 exit

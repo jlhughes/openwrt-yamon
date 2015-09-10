@@ -2,55 +2,24 @@
 
 ##########################################################################
 # Yet Another Monitor (YAMon)
-# Copyright (c) 2013-2014 Al Caughey
+# Copyright (c) 2013-2015 Al Caughey
 # All rights reserved.
 #
-#  This script makes a local copy of the files hosted at
-#  usage-monitoring.com and jquery.com.
+#  Copy this file to the Administration-->Commands tab in the DD-WRT GUI
 #
 ##########################################################################
 
+#
+# NB - if you are looking for the code to make a local copy of the files at
+#      usage-monitoring.com and jquery.com, that functionality has been moved
+#      to yamon2.sh and config.file
+#
+
+# wait for a bit (10 seconds)... depending on your router you can make this longer or shorter
+sleep 10
+
+# change path to suit your installation
 path="/mnt/sda1/yamon/Setup"
-web="http://usage-monitoring.com/current"
 
-_yamonhtml="$path/www/yamon2.html"
-_yamonjs="$path/www/js/yamon.js"
-_utiljs="$path/www/js/util.js"
-_faqjs="$path/www/js/faq.js"
-_md5js="$path/www/js/jquery.md5.min.js"
-_jquery="$path/www/js/jquery-latest.min.js"
-_jqueryui="$path/www/js/jquery-ui.js"
-_yamoncss="$path/www/css/yamon.css"
-_resetcss="$path/www/css/reset.css"
-
-sed -i "s~$web/~./~g" $_yamonhtml
-
-#get js files from usage-monitoring:
-
- 
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_yamonjs "$web/js/yamon.js"
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_utiljs "$web/js/util.js"
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_md5js "$web/js/jquery.md5.min.js"
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_faqjs "$web/js/faq.js"
-
-#get css files from usage-monitoring:
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_resetcss "$web/css/reset.css"
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_yamoncss "$web/css/yamon.css"
-
-#get other js files:
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_jquery "http://code.jquery.com/jquery-latest.min.js"
-	wget --header="Pragma: no-cache" --header="Cache-Control: no-cache" -O $_jqueryui "http://code.jquery.com/ui/1.10.0/jquery-ui.js"
-
-#make references local
-	sed -i "s~$web/~../~g" $_yamonjs
-	sed -i "s~$web/~../~g" $_utiljs
-	sed -i "s~$web/~../~g" $_faqjs
-	sed -i "s~$web/~../~g" $_yamoncss
-
-	sed -i "s~http://code.jquery.com/ui/1.10.0/~./js/~g" $_yamonhtml
-	sed -i "s~http://code.jquery.com/~./js/~g" $_yamonhtml
-
-	sleep 10
-
-#launch the script
-	$path/yamon2.sh
+# launch the script
+$path/yamon2.sh

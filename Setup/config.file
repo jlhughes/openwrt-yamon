@@ -1,6 +1,6 @@
 ##########################################################################
 # Yet Another Monitor (YAMon)
-# Copyright (c) 2013-2014 Al Caughey
+# Copyright (c) 2013-2015 Al Caughey
 # All rights reserved.
 #
 # DEFAULT CONFIG FILE FOR YAMon...
@@ -10,58 +10,83 @@
 ##########################################################################
 
 # version 2.0.14 - added parameters: _firmware, _bridgeIP, _defaultOwner, _defaultDeviceName, _do_separator
-# version 2.1.0 - added parameters: _includeIPv6 (coming soon???)
+# version 2.0.16 - added parameter: _doLocalFiles
+# version 2.0.17 - added parameter: _dbkey,_ignoreGateway, _gatewayMAC
+# version 2.0.18 - added parameter: _sendAlerts,_sendAlertTo
+# version 2.0.18e - added parameter: _path2MSMTP,_MSMTP_CONFIG
+# version 2.1.0 - added parameters: _organizeData,_includeIPv6
+# version 2.1.0b - added parameters: _symlink2data,_symlinkPath,allowMultipleIPsperMAC
+# version 2.2 - added parameters: _setupWebIndex; removed _symlinkPath
+# version 2.2.1 - added parameters: _wwwCSS, _wwwImages; removed _updateInterval
+# version 2.2.3 - removed _setupDir
 
-_firmware=1                             # which firmware is running on the router: permitted values: 0->DD-WRT(*) || 1->OpenWrt
-_updatefreq=15                          # number of seconds between updates (* default `15` sec)
-_updateInterval=4                       # number of intervals between updates of the usage data(* default `4`)
-_publishInterval=12                     # number of intervals between updates for to the website (* default `12`)
-_ispBillingDay=5                        # roll-over day of the month for ISP billing (* default `1`)
-_baseDir="/mnt/sda1/yamon/"                 # path to the installation folder (* default `/opt/YAMon/`)
-_setupDir="Setup/"                      # setup folder name (* default `Setup/`)
-_setupWebDir="Setup/www/"               # path to the web files (* default `Setup/www/`)
-_dataDir="data/"                        # path to the data directory (* default `data/`)
-_logDir="/tmp/yamon/logs/"                         # path to log files  (* default `logs/`)
-                                        #   NB - If _logDir starts with a slash it will be an absolute path (and _baseDir will be ignored)
-_wwwPath="/tmp/www/"                    # path to web directory (* default `/tmp/www/`)
-_wwwData="data/"                        # path to web data directory(* default `data/`)
-_wwwJS="js/"                            # path to JavaScript directory(* default `js/`)
-_usageFileName="mac_data.js"            # file name for usage data (* default `mac_data.js`)
-_usersFileName="users.js"               # file name for user/devices file (* default `users.js`)
-_configWWW="config.js"                  # file name for config file (* default `config.js`)
-_enableLogging=1                        # turn logging on/off: permitted values: 1->logging(*) || 0->no logging
-_log2file=1                             # send logs to screen or file: permitted values: 0->screen || 1->file(*) || 2->both
-_loglevel=0                             # amount of detail to include in the log: permitted values: -1->really verbose || 0->all || 1->most(*) || 2->serious only
-_dowwwBU=1                              # whether or not to make backups of the www directory when the script is shut down - values: 1-->Yes || 0->No(*)
-_wwwBU="wwwBU/"                         # path to web backup directory  (* default `wwwBU/`)
-                                        #   NB - only required if _dowwwBU == 1...
-                                        #   NB - If _wwwBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
-_doDailyBU=1                            # whether or not to make daily backups of user & usage data - values: 1-->Yes(*) || 0->No
-_dailyBUPath="daily-bu2/"               # path to back-ups directory (* default `daily bu/`)
-                                        #   NB - only required if doDailyBU == 1...
-                                        #   NB - if _dailyBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
-_tarBUs=1                               # permitted values: 0->no(*) || 1->yes
-                                        #   NB - if doDailyBU == 1 && _tarBUs==1, the daily backup files will be compressed
-_hourlyFileName="hourly_data.js"        # file name for hourly usage file (* default `hourly_data.js`)
-                                        #   NB - file extension changed from .html to .js
-_doLiveUpdates=1                        # whether or not to record live usage - values: 1-->Yes || 0->No(*)
-_doCurrConnections=1                    # whether or not to include current connections in the live usage file - values: 1-->Yes || 0->No(*)
-_liveFileName="live_data.js"            # file name for live usage data (* default `live_data.js`)
-                                        #   NB - only required if _doLiveUpdates == 1
-_lan_iface_only=0                       # whether to track data only from br0 - values: 0->No(*) || 1->Yes
-_unlimited_usage=0                      # whether or not you have an unlimited downloads time period: 0->No(*) || 1->Yes
-_unlimited_start="2:00"                 # the time (hours:minutes) when your unlimited downloads period starts
-_unlimited_end="5:30"                   # the time (hours:minutes) when your unlimited downloads period ends
-                                        #   NB - only required if _unlimited_usage == 1
-_settings_pswd=''                       # optionally password protect the Settings tab in the HTML reports (* default '' empty string or omitted)
-_dnsmasq_conf="/tmp/etc/dnsmasq.conf"       # path to dnsmasq.conf (* default `/tmp/dnsmasq.conf`)
-_dnsmasq_leases="/mnt/sda1/etc/dhcp.leases"   # path to dnsmasq.leases (* default `/tmp/dnsmasq.leases`)
-_do_separator=''                        # a default separator character between owner and device name in static leases or dnsmasq values, e.g., Al-iPhone
-_includeBridge=0                        # whether or not there is a bridge in your wireless configuration - values: 0-->No(*) || 1->Yes
-_bridgeMAC="XX:XX:XX:XX:XX:XX"          # mac address for the bridge device... MUST BE UPPERCASE!!!
-                                        #   NB - only required if _includeBridge == 1
-_bridgeIP="192.168.1.199"               # ip address for the bridge device... 
-                                        #   NB - only required if _includeBridge == 1
-_defaultOwner="Unknown"                 # default owner name for new devices
-_defaultDeviceName="New Device"         # default name for new devices if nothing can be found by the script
-_includeIPv6=0                          # whether or not your router is configured for IPv6: 0->no(*) || 1->yes *** LEAVE THIS AT 0 FOR NOW ***
+
+_firmware=1                                 # which firmware is running on the router: permitted values: 0->DD-WRT(*) || 1->OpenWrt || 2->Asuswrt-Merlin
+_updatefreq=30                               # number of seconds between updates (* default `30` sec)
+_publishInterval=4                           # number of intervals between updates for to the website (* default `4`)
+_ispBillingDay=1                             # roll-over day of the month for ISP billing (* default `1`)
+_baseDir="/mnt/sda1/yamon/"                      # path to the installation folder (* default `/opt/YAMon/`)
+_setupWebDir="Setup/www/"                    # path to the web files (* default `Setup/www/`)
+_setupWebIndex="yamon2.html"                 # path to the index page (* default `yamon2.html`)
+_dataDir="data/"                             # path to the data directory (* default `data/`)
+_logDir="/tmp/yamon/logs/"                              # path to log files  (* default `logs/`)
+                                             #   NB - If _logDir starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_symlink2data=1                              # use a symbolic link to /opt/YAMon2/data rather than /tmp/www/data... permitted values: 0->false || 1->true(*)
+_wwwPath="/tmp/www/"                         # path to web directory (* default `/tmp/www/`)
+_wwwData="data/"                             # path to web data directory(* default `data/`)
+_wwwJS="js/"                                 # path to JavaScript directory(* default `js/`)
+_wwwCSS="css/"                               # path to CSS directory(* default `css/`)
+_wwwImages="images/"                         # path to Images directory(* default `images/`)
+_usageFileName="mac_data.js"                 # file name for usage data (* default `mac_data.js`)
+_usersFileName="users.js"                    # file name for user/devices file (* default `users.js`)
+_configWWW="config.js"                       # file name for config file (* default `config.js`)
+_enableLogging=1                             # turn logging on/off: permitted values: 1->logging(*) || 0->no logging
+_log2file=1                                  # send logs to screen or file: permitted values: 0->screen || 1->file(*) || 2->both
+_loglevel=2                                  # amount of detail to include in the log: permitted values: -1->really verbose || 0->all || 1->most(*) || 2->serious only
+_dowwwBU=1                                   # whether or not to make backups of the www directory when the script is shut down - values: 1-->Yes || 0->No(*)
+_wwwBU="wwwBU/"                              # path to web backup directory  (* default `wwwBU/`)
+                                             #   NB - only required if _dowwwBU == 1...
+                                             #   NB - If _wwwBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_doDailyBU=1                                 # whether or not to make daily backups of user & usage data - values: 1-->Yes(*) || 0->No
+_dailyBUPath="daily-bu2/"                    # path to back-ups directory (* default `daily bu/`)
+                                             #   NB - only required if doDailyBU == 1...
+                                             #   NB - if _dailyBU starts with a slash it will be an absolute path (and _baseDir will be ignored)
+_tarBUs=1                                    # permitted values: 0->no(*) || 1->yes
+                                             #   NB - if doDailyBU == 1 && _tarBUs==1, the daily backup files will be compressed
+_hourlyFileName="hourly_data.js"             # file name for hourly usage file (* default `hourly_data.js`)
+                                             #   NB - file extension changed from .html to .js
+_doLiveUpdates=1                             # whether or not to record live usage - values: 1-->Yes || 0->No(*)
+_doCurrConnections=1                         # whether or not to include current connections in the live usage file - values: 1-->Yes || 0->No(*)
+_liveFileName="live_data.js"                 # file name for live usage data (* default `live_data.js`)
+                                             #   NB - only required if _doLiveUpdates == 1
+_lan_iface_only=0                            # whether to track data only from br0 - values: 0->No(*) || 1->Yes
+_unlimited_usage=0                           # whether or not you have an unlimited downloads time period: 0->No(*) || 1->Yes
+_unlimited_start="2:00"                      # the time (hours:minutes) when your unlimited downloads period starts
+_unlimited_end="5:30"                        # the time (hours:minutes) when your unlimited downloads period ends
+                                             #   NB - only required if _unlimited_usage == 1
+_settings_pswd=''                            # optionally password protect the Settings tab in the HTML reports (* default '' empty string or omitted)
+_dnsmasq_conf="/tmp/dnsmasq.conf"            # path to dnsmasq.conf (* default `/tmp/dnsmasq.conf`)
+_dnsmasq_leases="/mnt/sda1/etc/dhcp.leases"        # path to dnsmasq.leases (* default `/tmp/dnsmasq.leases`)
+_do_separator='-'                            # a default separator character between owner and device name in static leases or dnsmasq values, e.g., Al-iPhone
+_includeBridge=0                             # whether or not there is a bridge in your wireless configuration - values: 0-->No(*) || 1->Yes
+_bridgeMAC="XX:XX:XX:XX:XX:XX"               # mac address for the bridge device
+                                             #   NB - only required if _includeBridge == 1
+_bridgeIP="192.168.x.xxx"                    # ip address for the bridge device...
+                                             #   NB - only required if _includeBridge == 1
+_defaultOwner="Unknown"                      # default owner name for new devices
+_defaultDeviceName="New Device"              # default name for new devices if nothing can be found by the script
+_includeIPv6=0                               # whether or not your router is configured for IPv6: 0->no(*) || 1->yes
+_doLocalFiles=0                              # make a local copy of JS, CSS and images: 0->no(*recommended) || 1->copy using `curl` ||  2->copy using `wget`
+                                             #   NB - set to 1 or 2 if you do not want use the files hosted at my domain (usage-monitoring.com)
+                                             #   Some firmware versions do not support the `curl` function... set to 2 if you get errors with 1
+_dbkey=''                                    # if not null, this option will sync settings across all of your devices... 
+                                             #   NB - get the value for this parameter from the settings tab
+_ignoreGateway=0                             # whether or not to exclude any updates involving your gateway: 0->no(*) || 1->yes
+_gatewayMAC=""                               # mac address for the gateway
+_sendAlerts=0                                # whether or not to send alerts 0->no(*) || 1->yes (via usage-monitoring.com) || 2->via msmtp 
+                                             #   NB - currently only when a new entry is added to users.js or if iptables is corrupted
+_sendAlertTo=""                              #   NB - only required if _sendAlerts == 1
+_path2MSMTP=/opt/usr/bin/msmtp               #   NB - only required if _sendAlerts == 2
+_MSMTP_CONFIG=/opt/scripts/msmtprc           #   NB - only required if _sendAlerts == 2
+_organizeData=1                              # whether or not to organize data files - values: 0->no(*) || 1->by year || 2->by year & month
+allowMultipleIPperMaC=0                      # set to 1 if you have virtual machines with their own IP on a single MAC address - values: 0-->No(*) || 1->Yes
